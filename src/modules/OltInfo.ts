@@ -1,36 +1,33 @@
 import { backendClient } from "../services/api";
 
-interface ElectricityData {
-  quantity: string;
-  price: string;
-  value: string;
-  tariff: string;
+export interface IOltData {
+  slot: string;
+  port: string;
+  ont_id: string;
+  sn: string;
+  state: string;
 }
 
-interface Document {
-  id: string;
-  fileName: string;
-  filePath: string;
-  createdAt: string;
-  userId: string;
+export interface IOltDataForCreate {
+  data: IOltData[];
 }
 
-export interface IUser {
-  id: string;
-  customerNumber: string;
-  referenceMonth: string;
-  electricity: ElectricityData[];
-  injectedEnergy: ElectricityData[];
-  compensatedEnergy: ElectricityData[];
-  contributionPublicLighting: string;
-  documents: Document[];
-}
-
-export const fetchUser = async (filter?: string) => {
-  const { data } = await backendClient.get("/user", { params: { filter } });
-  return data;
+export const fetchOlt = async () => {
+  try {
+    const { data } = await backendClient.get("/oltoutput");
+    return data;
+  } catch (error) {
+    console.error("Erro ao buscar dados da OLT:", error);
+    throw error;
+  }
 };
 
-export const getPdfDownload = async (id: string) => {
-  window.open(`${import.meta.env.VITE_REACT_API_URL}/download/${id}`);
+export const createOlt = async (data: IOltDataForCreate) => {
+  try {
+    const response = await backendClient.post("/oltoutput", data);
+    return response.data;
+  } catch (error) {
+    console.error("Erro ao enviar dados para a OLT:", error);
+    throw error;
+  }
 };

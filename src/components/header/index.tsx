@@ -1,14 +1,14 @@
 import { MenuIcon, Package2Icon } from "lucide-react";
-import { Sheet, SheetContent, SheetTrigger } from "../ui/sheet";
-import { Button } from "../ui/button";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "../ui/dropdown-menu";
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "../ui/sheet";
+import { Button } from "../ui/button";
+import { DropdownMenu } from "../ui/dropdown-menu";
 import { ModeToggle } from "../modo-toggle";
 import { Link } from "react-router-dom";
 
@@ -30,12 +30,6 @@ export function Header() {
           >
             Dashboard
           </Link>
-          <Link
-            to="/products"
-            className="text-muted-foreground transition-colors hover:text-foreground"
-          >
-            Faturas
-          </Link>
         </nav>
         <Sheet>
           <SheetTrigger asChild>
@@ -48,7 +42,12 @@ export function Header() {
               <span className="sr-only">Toggle navigation menu</span>
             </Button>
           </SheetTrigger>
+
           <SheetContent side="left">
+            <SheetHeader>
+              <SheetTitle />
+              <SheetDescription />
+            </SheetHeader>
             <nav className="grid gap-6 text-lg font-medium">
               <Link
                 to="/"
@@ -60,28 +59,12 @@ export function Header() {
               <Link to="/" className="hover:text-foreground">
                 Dashboard
               </Link>
-              <Link
-                to="/products"
-                className="text-muted-foreground hover:text-foreground"
-              >
-                Faturas
-              </Link>
             </nav>
           </SheetContent>
         </Sheet>
         <div className="flex w-full items-center gap-4 md:ml-auto md:gap-2 lg:gap-4 justify-end">
           <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <ModeToggle />
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuLabel>My Account</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem>Settings</DropdownMenuItem>
-              <DropdownMenuItem>Support</DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem>Logout</DropdownMenuItem>
-            </DropdownMenuContent>
+            <ModeToggle />
           </DropdownMenu>
         </div>
       </header>
