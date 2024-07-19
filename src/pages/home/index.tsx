@@ -143,10 +143,12 @@ export function Home() {
       }
 
       const columns = line.split(/\s+/);
-      const slotPortOnt = columns[0].split(":");
+
+      const slotPortOnt = columns[0].split(" ");
+
       const slot = slotPortOnt[0].split("/")[0];
       const port = slotPortOnt[0].split("/")[1];
-      const ont_id = slotPortOnt[0].split("/")[2];
+      const ont_id = slotPortOnt[0].split(":")[1];
       const state = columns[3];
 
       const onuData = {
@@ -178,11 +180,11 @@ export function Home() {
       const authInfo = columns[3];
       const state = columns[4];
 
-      const match = onuIndex.match(/gpon-onu_(\d+)\/(\d+)\/(\d+)/);
+      const match = onuIndex.match(/gpon-onu_(\d+)\/(\d+)\/(\d+):(\d+)/);
       if (match) {
         const slot = match[1];
         const port = match[2];
-        const ont_id = match[3];
+        const ont_id = match[4];
 
         const snMatch = authInfo.match(/SN:(\S+)/);
         const sn = snMatch ? snMatch[1] : "";
