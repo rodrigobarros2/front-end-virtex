@@ -117,10 +117,94 @@ export function Home() {
     }
   };
 
-  function extractInformation(txt) {
+  function extractInformation(input) {
+    const lines = input.split("\n");
+    console.log("lines[5]", lines[5]);
+
+    if (lines[1].includes("OnuIndex") && lines[1].includes("Admin State")) {
+      return parseOntInfoZTESNsState(input);
+    } else if (lines[0].includes("Type") && lines[0].includes("AuthInfo")) {
+      return parseOntInfoZTESNs(input);
+    } else if (lines[5].includes("F/S/P") && lines[5].includes("ONT")) {
+      return parseOntInfoHuawei(input);
+    } else {
+      throw new Error("Formato de entrada não reconhecido.");
+    }
+  }
+
+  function parseOntInfoZTESNsState(input) {
+    const lines = input.split("\n");
+    const data = [];
+
+    for (let i = 3; i < lines.length; i++) {
+      const line = lines[i].trim();
+      if (line === "" || line.startsWith("ONU Number")) {
+        continue;
+      }
+
+      const columns = line.split(/\s+/);
+      const slotPortOnt = columns[0].split(":");
+      const slot = slotPortOnt[0].split("/")[0];
+      const port = slotPortOnt[0].split("/")[1];
+      const ont_id = slotPortOnt[0].split("/")[2];
+      const state = columns[3];
+
+      const onuData = {
+        slot: slot,
+        port: port,
+        ont_id: ont_id,
+        state: state,
+        sn: "",
+      };
+
+      data.push(onuData);
+    }
+
+    setExtractedData(data);
+  }
+
+  function parseOntInfoZTESNs(input) {
+    const lines = input.split("\n");
+    const data = [];
+
+    for (let i = 2; i < lines.length; i++) {
+      const line = lines[i].trim();
+      if (line === "") {
+        continue;
+      }
+
+      const columns = line.split(/\s+/);
+      const onuIndex = columns[0];
+      const authInfo = columns[3];
+      const state = columns[4];
+
+      const match = onuIndex.match(/gpon-onu_(\d+)\/(\d+)\/(\d+)/);
+      if (match) {
+        const slot = match[1];
+        const port = match[2];
+        const ont_id = match[3];
+
+        const snMatch = authInfo.match(/SN:(\S+)/);
+        const sn = snMatch ? snMatch[1] : "";
+
+        const onuData = {
+          slot: slot,
+          port: port,
+          ont_id: ont_id,
+          state: state,
+          sn: sn,
+        };
+
+        data.push(onuData);
+      }
+    }
+
+    setExtractedData(data);
+  }
+
+  function parseOntInfoHuawei(txt) {
     let lines = txt.split("\n");
     let data = [];
-
     let inDataSection = false;
 
     for (let line of lines) {
@@ -139,11 +223,9 @@ export function Home() {
 
       if (inDataSection && line.trim() !== "") {
         let parts = line.trim().split(/\s+/);
-
         if (parts.length >= 7) {
-          let slot = parts[0].replace("/", "");
+          let slot = parts[1].split("/").shift();
           let port = parts[1].substring(2);
-
           let ont_id = parts[2];
           let sn = parts[3];
           let state = parts[5];
@@ -152,7 +234,6 @@ export function Home() {
         }
       }
     }
-
     setExtractedData(data);
   }
 
