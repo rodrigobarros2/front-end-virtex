@@ -52,12 +52,8 @@ export function Home() {
 
   const [oltExtractorModal, setShowOltExtractorModal] = useState(false);
   const [oltData, setOltData] = useState<IOltData[]>([]);
-
   const [fileContent, setFileContent] = useState("");
-  console.log("🚀 ~ Home ~ fileContent:", fileContent);
-
   const [extractedData, setExtractedData] = useState([]);
-  console.log("🚀 ~ Home ~ extractedData:", extractedData);
 
   useEffect(() => {
     async function fetchData() {
@@ -119,7 +115,6 @@ export function Home() {
 
   function extractInformation(input) {
     const lines = input.split("\n");
-    console.log("lines[5]", lines[5]);
 
     if (lines[1].includes("OnuIndex") && lines[1].includes("Admin State")) {
       return parseOntInfoZTESNsState(input);
