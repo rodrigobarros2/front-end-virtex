@@ -1,5 +1,3 @@
-// Home.tsx
-
 import { useEffect, useState } from "react";
 import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
@@ -31,7 +29,13 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Header } from "@/components/header";
-import { ArrowUpDownIcon, DownloadIcon, RefreshCwIcon } from "lucide-react";
+import {
+  ArrowUpDownIcon,
+  DownloadIcon,
+  FileText,
+  RefreshCwIcon,
+  Table as TableIcon,
+} from "lucide-react";
 
 import {
   createOlt,
@@ -41,11 +45,19 @@ import {
 } from "@/modules/OltInfo";
 import { FieldValues, SubmitHandler, useForm } from "react-hook-form";
 
+import { Label } from "@/components/ui/label";
+
 export function Home() {
   const { register, handleSubmit, reset } = useForm();
 
   const [oltExtractorModal, setShowOltExtractorModal] = useState(false);
   const [oltData, setOltData] = useState<IOltData[]>([]);
+
+  const [fileContent, setFileContent] = useState("");
+  console.log("🚀 ~ Home ~ fileContent:", fileContent);
+
+  const [extractedData, setExtractedData] = useState([]);
+  console.log("🚀 ~ Home ~ extractedData:", extractedData);
 
   useEffect(() => {
     async function fetchData() {
@@ -92,6 +104,72 @@ export function Home() {
     handleCloseOltModal();
   };
 
+  const handleFileChange = (event) => {
+    const file = event.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const content = e.target.result;
+        setFileContent(content);
+        extractInformation(content);
+      };
+      reader.readAsText(file);
+    }
+  };
+
+  function extractInformation(txt) {
+    let lines = txt.split("\n");
+    let data = [];
+
+    let inDataSection = false;
+
+    for (let line of lines) {
+      if (line.includes("F/S/P   ONT")) {
+        inDataSection = true;
+        continue;
+      }
+
+      if (line.includes("-") && inDataSection) {
+        continue;
+      }
+
+      if (line.includes("In port")) {
+        break;
+      }
+
+      if (inDataSection && line.trim() !== "") {
+        let parts = line.trim().split(/\s+/);
+
+        if (parts.length >= 7) {
+          let slot = parts[0].replace("/", "");
+          let port = parts[1].substring(2);
+
+          let ont_id = parts[2];
+          let sn = parts[3];
+          let state = parts[5];
+
+          data.push({ slot, port, ont_id, sn, state });
+        }
+      }
+    }
+
+    setExtractedData(data);
+  }
+
+  const sendExtractedData = async () => {
+    try {
+      const dataToSend: IOltDataForCreate = {
+        data: extractedData,
+      };
+      await createOlt(dataToSend);
+      setFileContent("");
+      alert("Dados enviados com sucesso!");
+    } catch (error) {
+      console.error("Erro ao enviar dados para o back-end:", error);
+      alert("Erro ao enviar dados. Verifique o console para mais detalhes.");
+    }
+  };
+
   return (
     <div className="flex min-h-screen w-full flex-col">
       <Header />
@@ -113,13 +191,36 @@ export function Home() {
                           <RefreshCwIcon className="w-5 h-5 mr-2" />
                           Recarregar
                         </Button>
+
                         <Button
+                          className="gap-2 w-full md:w-auto h-11 cursor-pointer"
+                          type="button"
+                          variant={"outline"}
+                          asChild
+                        >
+                          <label>
+                            <Input
+                              className="hidden"
+                              type="file"
+                              accept=".txt"
+                              onChange={handleFileChange}
+                            />
+                            <FileText className="w-4 h-4" />
+                            Carregar Informações do OLT
+                          </label>
+                        </Button>
+
+                        <Button onClick={sendExtractedData}>
+                          Enviar Dados OLT
+                        </Button>
+
+                        <Button
+                          className="flex gap-1 h-10"
                           variant="default"
-                          className="flex gap-1"
                           onClick={() => setShowOltExtractorModal(true)}
                         >
-                          <DownloadIcon className="w-5 h-5 g-3" />
-                          Extrair Info OLT
+                          <TableIcon className="w-4 h-4 g-3" />
+                          Cadastrar OLT
                         </Button>
                       </div>
                     </div>
@@ -205,7 +306,7 @@ export function Home() {
       </div>
 
       <Dialog open={oltExtractorModal} onOpenChange={handleCloseOltModal}>
-        <DialogTrigger>Open</DialogTrigger>
+        <DialogTrigger />
         <DialogContent className="sm:max-w-[425px]">
           <DialogTitle className="sr-only">Extract OLT</DialogTitle>
 
