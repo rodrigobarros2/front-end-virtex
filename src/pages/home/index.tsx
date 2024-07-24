@@ -44,6 +44,7 @@ import {
 } from "@/modules/OltInfo";
 
 import { toast } from "react-toastify";
+import { standardizeState } from "@/utils/standardizeState";
 
 export function Home() {
   const {
@@ -182,22 +183,6 @@ export function Home() {
       setLoading(false);
       setFileModalOpen(false);
     }
-  };
-
-  const standardizeState = (state: string) => {
-    const normalizedState = state.toLowerCase();
-
-    if (
-      normalizedState === "working" ||
-      normalizedState === "online" ||
-      normalizedState === "dyinggasp"
-    ) {
-      return "Online";
-    } else if (normalizedState === "offline" || normalizedState === "offline") {
-      return "Offline";
-    }
-
-    return "Unknown";
   };
 
   return (
