@@ -33,7 +33,7 @@ export const createOlt = async (data: IOltDataForCreate) => {
   }
 };
 
-export const createOltTxt = async (formData: IOltDataForCreate) => {
+export const createOltTxt = async (formData: FormData) => {
   try {
     await backendClient.post("/upload", formData, {
       headers: {

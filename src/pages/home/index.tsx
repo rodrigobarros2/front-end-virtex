@@ -100,7 +100,7 @@ export function Home() {
 
       try {
         await createOlt(dataToSend);
-        fetchData(); // Recarregar dados após sucesso
+        fetchData();
       } catch (error) {
         console.error("Erro ao criar OLT:", error);
         alert("Falha ao criar OLT.");
@@ -115,16 +115,22 @@ export function Home() {
     handleCloseOltModal();
   };
 
-  const handleFileChangeHuawei = (event) => {
-    setFileHuawei(event.target.files[0]);
+  const handleFileChangeHuawei = (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    setFileHuawei(event.target.files ? event.target.files[0] : null);
   };
 
-  const handleFileChangeZteState = (event) => {
-    setFileZteState(event.target.files[0]);
+  const handleFileChangeZteState = (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    setFileZteState(event.target.files ? event.target.files[0] : null);
   };
 
-  const handleFileChangeZteSn = (event) => {
-    setFileZteSn(event.target.files[0]);
+  const handleFileChangeZteSn = (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    setFileZteSn(event.target.files ? event.target.files[0] : null);
   };
 
   const handleSubmitSingleFile = async () => {
@@ -175,7 +181,7 @@ export function Home() {
     }
   };
 
-  const standardizeState = (state) => {
+  const standardizeState = (state: string) => {
     const normalizedState = state.toLowerCase();
 
     if (
@@ -356,7 +362,7 @@ export function Home() {
                   aria-invalid={errors.olt_type ? "true" : "false"}
                 />
                 {errors.olt_type && (
-                  <span role="alert">{errors.olt_type.message}</span>
+                  <span role="alert">{String(errors.olt_type.message)}</span>
                 )}
               </div>
 
@@ -368,7 +374,9 @@ export function Home() {
                   {...register("slot", { required: "Slot é obrigatório" })}
                   aria-invalid={errors.slot ? "true" : "false"}
                 />
-                {errors.slot && <span role="alert">{errors.slot.message}</span>}
+                {errors.slot && (
+                  <span role="alert">{String(errors.slot.message)}</span>
+                )}
               </div>
 
               <div className="flex flex-col gap-3">
@@ -379,7 +387,9 @@ export function Home() {
                   {...register("port", { required: "Port é obrigatório" })}
                   aria-invalid={errors.port ? "true" : "false"}
                 />
-                {errors.port && <span role="alert">{errors.port.message}</span>}
+                {errors.port && (
+                  <span role="alert">{String(errors.port.message)}</span>
+                )}
               </div>
 
               <div className="flex flex-col gap-3">
@@ -391,7 +401,7 @@ export function Home() {
                   aria-invalid={errors.ont_id ? "true" : "false"}
                 />
                 {errors.ont_id && (
-                  <span role="alert">{errors.ont_id.message}</span>
+                  <span role="alert">{String(errors.ont_id.message)}</span>
                 )}
               </div>
 
@@ -403,7 +413,10 @@ export function Home() {
                   {...register("sn", { required: "SN é obrigatório" })}
                   aria-invalid={errors.sn ? "true" : "false"}
                 />
-                {errors.sn && <span role="alert">{errors.sn.message}</span>}
+
+                {errors.sn && (
+                  <span role="alert">{String(errors.sn.message)}</span>
+                )}
               </div>
 
               <div className="flex flex-col gap-3">
@@ -415,7 +428,7 @@ export function Home() {
                   aria-invalid={errors.state ? "true" : "false"}
                 />
                 {errors.state && (
-                  <span role="alert">{errors.state.message}</span>
+                  <span role="alert">{String(errors.state.message)}</span>
                 )}
               </div>
             </div>
