@@ -31,7 +31,6 @@ import {
 import { Header } from "@/components/header";
 import {
   ArrowUpDownIcon,
-  DownloadIcon,
   FileText,
   RefreshCwIcon,
   Table as TableIcon,
@@ -39,32 +38,35 @@ import {
 
 import {
   createOlt,
+  createOltTxt,
   fetchOlt,
   IOltData,
   IOltDataForCreate,
 } from "@/modules/OltInfo";
 import { FieldValues, SubmitHandler, useForm } from "react-hook-form";
-
 import { Label } from "@/components/ui/label";
 
 export function Home() {
   const { register, handleSubmit, reset } = useForm();
 
   const [oltExtractorModal, setShowOltExtractorModal] = useState(false);
+  const [fileHuawei, setFileHuawei] = useState<File | null>(null);
+  const [fileZteState, setFileZteState] = useState<File | null>(null);
+  const [fileZteSn, setFileZteSn] = useState<File | null>(null);
   const [oltData, setOltData] = useState<IOltData[]>([]);
-  const [fileContent, setFileContent] = useState("");
-  const [extractedData, setExtractedData] = useState([]);
+  const [fileModalOpen, setFileModalOpen] = useState(false);
+
+  // Função para buscar dados da API
+  const fetchData = async () => {
+    try {
+      const response = await fetchOlt();
+      setOltData(response);
+    } catch (error) {
+      console.error("Erro ao buscar dados da API:", error);
+    }
+  };
 
   useEffect(() => {
-    async function fetchData() {
-      try {
-        const response = await fetchOlt();
-        setOltData(response);
-      } catch (error) {
-        console.error("Erro ao buscar dados da API:", error);
-      }
-    }
-
     fetchData();
   }, []);
 
@@ -73,7 +75,9 @@ export function Home() {
     reset();
   };
 
-  const handleRefreshTable = () => console.log("Refreshing table...");
+  const handleRefreshTable = () => {
+    fetchData();
+  };
 
   const onSubmitOntInfo: SubmitHandler<FieldValues> = async (data) => {
     if (data.slot || data.port || data.ont_id || data.sn || data.state) {
@@ -85,11 +89,18 @@ export function Home() {
             ont_id: data.ont_id,
             sn: data.sn,
             state: data.state,
+            olt_type: data.olt_type,
           },
         ],
       };
 
-      createOlt(dataToSend);
+      try {
+        await createOlt(dataToSend);
+        fetchData(); // Recarregar dados após sucesso
+      } catch (error) {
+        console.error("Erro ao criar OLT:", error);
+        alert("Falha ao criar OLT.");
+      }
     }
 
     handleCloseOltModal();
@@ -100,152 +111,74 @@ export function Home() {
     handleCloseOltModal();
   };
 
-  const handleFileChange = (event) => {
-    const file = event.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const content = e.target.result;
-        setFileContent(content);
-        extractInformation(content);
-      };
-      reader.readAsText(file);
+  const handleFileChangeHuawei = (event) => {
+    setFileHuawei(event.target.files[0]);
+  };
+
+  const handleFileChangeZteState = (event) => {
+    setFileZteState(event.target.files[0]);
+  };
+
+  const handleFileChangeZteSn = (event) => {
+    setFileZteSn(event.target.files[0]);
+  };
+
+  const handleSubmitSingleFile = async () => {
+    if (!fileHuawei) {
+      alert("Por favor, selecione o arquivo Huawei.");
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append("huaweiFile", fileHuawei);
+
+    try {
+      await createOltTxt(formData);
+      alert("Arquivo Huawei enviado com sucesso!");
+      setFileHuawei(null);
+      fetchData(); // Recarregar dados após sucesso
+    } catch (error) {
+      console.error("Erro ao enviar arquivo Huawei:", error);
+      alert("Falha ao enviar o arquivo Huawei.");
     }
   };
 
-  function extractInformation(input) {
-    const lines = input.split("\n");
-
-    if (lines[1].includes("OnuIndex") && lines[1].includes("Admin State")) {
-      return parseOntInfoZTESNsState(input);
-    } else if (lines[0].includes("Type") && lines[0].includes("AuthInfo")) {
-      return parseOntInfoZTESNs(input);
-    } else if (lines[5].includes("F/S/P") && lines[5].includes("ONT")) {
-      return parseOntInfoHuawei(input);
-    } else {
-      throw new Error("Formato de entrada não reconhecido.");
-    }
-  }
-
-  function parseOntInfoZTESNsState(input) {
-    const lines = input.split("\n");
-    const data = [];
-
-    for (let i = 3; i < lines.length; i++) {
-      const line = lines[i].trim();
-      if (line === "" || line.startsWith("ONU Number")) {
-        continue;
-      }
-
-      const columns = line.split(/\s+/);
-
-      const slotPortOnt = columns[0].split(" ");
-
-      const slot = slotPortOnt[0].split("/")[0];
-      const port = slotPortOnt[0].split("/")[1];
-      const ont_id = slotPortOnt[0].split(":")[1];
-      const state = columns[3];
-
-      const onuData = {
-        slot: slot,
-        port: port,
-        ont_id: ont_id,
-        state: state,
-        sn: "",
-      };
-
-      data.push(onuData);
+  const handleSubmitTwoFiles = async () => {
+    if (!fileZteState || !fileZteSn) {
+      alert("Por favor, selecione ambos os arquivos.");
+      return;
     }
 
-    setExtractedData(data);
-  }
+    const formData = new FormData();
+    formData.append("zteStateFile", fileZteState);
+    formData.append("zteSnFile", fileZteSn);
 
-  function parseOntInfoZTESNs(input) {
-    const lines = input.split("\n");
-    const data = [];
-
-    for (let i = 2; i < lines.length; i++) {
-      const line = lines[i].trim();
-      if (line === "") {
-        continue;
-      }
-
-      const columns = line.split(/\s+/);
-      const onuIndex = columns[0];
-      const authInfo = columns[3];
-      const state = columns[4];
-
-      const match = onuIndex.match(/gpon-onu_(\d+)\/(\d+)\/(\d+):(\d+)/);
-      if (match) {
-        const slot = match[1];
-        const port = match[2];
-        const ont_id = match[4];
-
-        const snMatch = authInfo.match(/SN:(\S+)/);
-        const sn = snMatch ? snMatch[1] : "";
-
-        const onuData = {
-          slot: slot,
-          port: port,
-          ont_id: ont_id,
-          state: state,
-          sn: sn,
-        };
-
-        data.push(onuData);
-      }
-    }
-
-    setExtractedData(data);
-  }
-
-  function parseOntInfoHuawei(txt) {
-    let lines = txt.split("\n");
-    let data = [];
-    let inDataSection = false;
-
-    for (let line of lines) {
-      if (line.includes("F/S/P   ONT")) {
-        inDataSection = true;
-        continue;
-      }
-
-      if (line.includes("-") && inDataSection) {
-        continue;
-      }
-
-      if (line.includes("In port")) {
-        break;
-      }
-
-      if (inDataSection && line.trim() !== "") {
-        let parts = line.trim().split(/\s+/);
-        if (parts.length >= 7) {
-          let slot = parts[1].split("/").shift();
-          let port = parts[1].substring(2);
-          let ont_id = parts[2];
-          let sn = parts[3];
-          let state = parts[5];
-
-          data.push({ slot, port, ont_id, sn, state });
-        }
-      }
-    }
-    setExtractedData(data);
-  }
-
-  const sendExtractedData = async () => {
     try {
-      const dataToSend: IOltDataForCreate = {
-        data: extractedData,
-      };
-      await createOlt(dataToSend);
-      setFileContent("");
-      alert("Dados enviados com sucesso!");
+      await createOltTxt(formData);
+      alert("Arquivos ZTE enviados com sucesso!");
+      setFileZteState(null);
+      setFileZteSn(null);
+      fetchData(); // Recarregar dados após sucesso
     } catch (error) {
-      console.error("Erro ao enviar dados para o back-end:", error);
-      alert("Erro ao enviar dados. Verifique o console para mais detalhes.");
+      console.error("Erro ao enviar arquivos ZTE:", error);
+      alert("Falha ao enviar os arquivos ZTE.");
     }
+  };
+
+  const standardizeState = (state) => {
+    const normalizedState = state.toLowerCase();
+
+    if (
+      normalizedState === "working" ||
+      normalizedState === "online" ||
+      normalizedState === "dyinggasp"
+    ) {
+      return "Online";
+    } else if (normalizedState === "offline" || normalizedState === "offline") {
+      return "Offline";
+    }
+
+    return "Unknown";
   };
 
   return (
@@ -271,25 +204,12 @@ export function Home() {
                         </Button>
 
                         <Button
-                          className="gap-2 w-full md:w-auto h-11 cursor-pointer"
-                          type="button"
-                          variant={"outline"}
-                          asChild
+                          className="flex gap-1 h-10"
+                          variant="default"
+                          onClick={() => setFileModalOpen(true)}
                         >
-                          <label>
-                            <Input
-                              className="hidden"
-                              type="file"
-                              accept=".txt"
-                              onChange={handleFileChange}
-                            />
-                            <FileText className="w-4 h-4" />
-                            Carregar Informações do OLT
-                          </label>
-                        </Button>
-
-                        <Button onClick={sendExtractedData}>
-                          Enviar Dados OLT
+                          <TableIcon className="w-4 h-4 g-3" />
+                          Carregar Arquivos OLT
                         </Button>
 
                         <Button
@@ -335,6 +255,13 @@ export function Home() {
                               <span className="sr-only">Sort</span>
                             </Button>
                           </TableHead>
+                          <TableHead>
+                            marca
+                            <Button variant="ghost" size="icon">
+                              <ArrowUpDownIcon className="h-4 w-4" />
+                              <span className="sr-only">Sort</span>
+                            </Button>
+                          </TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
@@ -347,7 +274,10 @@ export function Home() {
                             <TableCell>{order.port}</TableCell>
                             <TableCell>{order.ont_id}</TableCell>
                             <TableCell>{order.sn}</TableCell>
-                            <TableCell>{order.state}</TableCell>
+                            <TableCell>
+                              {standardizeState(order.state)}
+                            </TableCell>
+                            <TableCell>{order.olt_type}</TableCell>
                           </TableRow>
                         ))}
                       </TableBody>
@@ -356,6 +286,7 @@ export function Home() {
                 </Card>
               </TabsContent>
             </Tabs>
+
             <div className="flex justify-center">
               <Pagination>
                 <PaginationContent>
@@ -366,9 +297,7 @@ export function Home() {
                     <PaginationLink href="#">1</PaginationLink>
                   </PaginationItem>
                   <PaginationItem>
-                    <PaginationLink href="#" isActive>
-                      2
-                    </PaginationLink>
+                    <PaginationLink href="#">2</PaginationLink>
                   </PaginationItem>
                   <PaginationItem>
                     <PaginationLink href="#">3</PaginationLink>
@@ -383,21 +312,70 @@ export function Home() {
         </main>
       </div>
 
+      {/* Modal para Carregar Arquivos OLT */}
+      <Dialog open={fileModalOpen} onOpenChange={() => setFileModalOpen(false)}>
+        <DialogTrigger />
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Carregar Arquivos OLT</DialogTitle>
+            <DialogDescription>
+              Selecione os arquivos e envie-os para processamento.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="grid w-full max-w-sm items-center gap-1.5">
+            <Label htmlFor="picture"> Carregar saída de único comando</Label>
+            <Input
+              type="file"
+              accept=".txt"
+              onChange={handleFileChangeHuawei}
+            />
+          </div>
+
+          <div className="grid w-full max-w-sm items-center gap-1.5">
+            <Button className="mb-12" onClick={handleSubmitSingleFile}>
+              Enviar saída de único comando
+            </Button>
+
+            <div className="grid w-full max-w-sm items-center gap-1.5">
+              <Label htmlFor="oltOut1">Carregar saída de dois comandos</Label>
+              <Input
+                id="oltOut1"
+                accept=".txt"
+                type="file"
+                onChange={handleFileChangeZteState}
+              />
+            </div>
+
+            <div className="grid w-full max-w-sm items-center gap-1.5 mt-2 mb-3">
+              <Label htmlFor="oltOut2">Carregar saída de dois comandos</Label>
+              <Input
+                id="oltOut2"
+                accept=".txt"
+                type="file"
+                onChange={handleFileChangeZteSn}
+              />
+            </div>
+
+            <Button onClick={handleSubmitTwoFiles}>
+              Enviar saída de dois comandos
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Modal para Cadastrar OLT */}
       <Dialog open={oltExtractorModal} onOpenChange={handleCloseOltModal}>
         <DialogTrigger />
         <DialogContent className="sm:max-w-[425px]">
-          <DialogTitle className="sr-only">Extract OLT</DialogTitle>
-
           <DialogHeader>
-            <DialogTitle>Edit profile</DialogTitle>
+            <DialogTitle>Cadastrar OLT</DialogTitle>
             <DialogDescription>
-              Make changes to your profile here. Click save when you're done.
+              Preencha o formulário para cadastrar uma nova OLT.
             </DialogDescription>
           </DialogHeader>
 
           <div className="flex flex-col items-center justify-center gap-4 py-8">
-            <p className="text-lg font-medium">Extract OLT</p>
-
             <form onSubmit={handleSubmit(onSubmitOntInfo)}>
               <div className="grid gap-4 w-full">
                 <Input placeholder="Slot" {...register("slot")} />
@@ -405,18 +383,16 @@ export function Home() {
                 <Input placeholder="Ont ID" {...register("ont_id")} />
                 <Input placeholder="SN" {...register("sn")} />
                 <Input placeholder="State" {...register("state")} />
+                <Input placeholder="Marca" {...register("olt_type")} />
               </div>
-              <DialogFooter>
+              <DialogFooter className="pt-4">
                 <Button variant="outline" onClick={handleCancel}>
-                  Cancel
+                  Cancelar
                 </Button>
-                <Button type="submit">Generate Olt Info</Button>
+                <Button type="submit">Gerar Olt Info</Button>
               </DialogFooter>
             </form>
           </div>
-          <p id="olt-extract-description" className="sr-only">
-            Fill out the form to extract information about the OLT.
-          </p>
         </DialogContent>
       </Dialog>
     </div>
