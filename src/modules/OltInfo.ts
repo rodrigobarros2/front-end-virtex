@@ -16,7 +16,7 @@ export interface IOltDataForCreate {
 
 export const fetchOlt = async () => {
   try {
-    const { data } = await backendClient.get("/data");
+    const { data } = await backendClient.get("/info-olt");
     return data;
   } catch (error) {
     toast.error("Falha ao buscar dados da OLT!");
@@ -27,7 +27,7 @@ export const fetchOlt = async () => {
 
 export const createOlt = async (data: IOltDataForCreate) => {
   try {
-    const response = await backendClient.post("/oltoutput", data);
+    const response = await backendClient.post("/info-olt", data);
     toast.success("Dados cadastrados com sucesso!");
     return response.data;
   } catch (error) {
@@ -39,7 +39,7 @@ export const createOlt = async (data: IOltDataForCreate) => {
 
 export const createOltTxt = async (formData: FormData) => {
   try {
-    await backendClient.post("/upload", formData, {
+    await backendClient.post("/upload-olt", formData, {
       headers: {
         "Content-Type": "multipart/form-data",
       },
