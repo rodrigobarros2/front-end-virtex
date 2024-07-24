@@ -26,9 +26,9 @@ export function Header() {
           </Link>
           <Link
             to="/"
-            className="text-foreground transition-colors hover:text-foreground"
+            className="text-foreground transition-colors hover:text-foreground text-nowrap"
           >
-            Dashboard
+            Desafio Virtex
           </Link>
         </nav>
         <Sheet>
@@ -57,7 +57,7 @@ export function Header() {
                 <span className="sr-only">Acme Inc</span>
               </Link>
               <Link to="/" className="hover:text-foreground">
-                Dashboard
+                Desafio Virtex
               </Link>
             </nav>
           </SheetContent>
