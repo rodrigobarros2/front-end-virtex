@@ -43,6 +43,8 @@ import {
   IOltDataForCreate,
 } from "@/modules/OltInfo";
 
+import { toast } from "react-toastify";
+
 export function Home() {
   const {
     register,
@@ -80,6 +82,7 @@ export function Home() {
   };
 
   const handleRefreshTable = () => {
+    toast.success("Tabela atualizada!");
     fetchData();
   };
 
@@ -103,7 +106,7 @@ export function Home() {
         fetchData();
       } catch (error) {
         console.error("Erro ao criar OLT:", error);
-        alert("Falha ao criar OLT.");
+        toast.error("Falha ao salvar OLT.");
       }
     }
 
@@ -135,7 +138,7 @@ export function Home() {
 
   const handleSubmitSingleFile = async () => {
     if (!fileHuawei) {
-      alert("Por favor, selecione o arquivo Huawei.");
+      toast.error("Por favor, selecione o arquivo Huawei.");
       return;
     }
 
@@ -149,7 +152,7 @@ export function Home() {
       fetchData();
     } catch (error) {
       console.error("Erro ao enviar arquivo Huawei:", error);
-      alert("Falha ao enviar o arquivo Huawei.");
+      toast.error("Falha ao enviar o arquivo Huawei.");
     } finally {
       setLoading(false);
       setFileModalOpen(false);
@@ -158,7 +161,7 @@ export function Home() {
 
   const handleSubmitTwoFiles = async () => {
     if (!fileZteState || !fileZteSn) {
-      alert("Por favor, selecione ambos os arquivos.");
+      toast.error("Por favor, selecione os arquivos ZTE.");
       return;
     }
 
@@ -174,7 +177,7 @@ export function Home() {
       fetchData();
     } catch (error) {
       console.error("Erro ao enviar arquivos ZTE:", error);
-      alert("Falha ao enviar os arquivos ZTE.");
+      toast.error("Falha ao enviar os arquivos ZTE.");
     } finally {
       setLoading(false);
       setFileModalOpen(false);
@@ -357,12 +360,14 @@ export function Home() {
                   id="olt_type"
                   placeholder="Digite a OLT"
                   {...register("olt_type", {
-                    required: "Tipo de OLT é obrigatório",
+                    required: "OLT é obrigatório",
                   })}
                   aria-invalid={errors.olt_type ? "true" : "false"}
                 />
                 {errors.olt_type && (
-                  <span role="alert">{String(errors.olt_type.message)}</span>
+                  <span className="text-red-500" role="alert">
+                    {String(errors.olt_type.message)}
+                  </span>
                 )}
               </div>
 
@@ -375,7 +380,9 @@ export function Home() {
                   aria-invalid={errors.slot ? "true" : "false"}
                 />
                 {errors.slot && (
-                  <span role="alert">{String(errors.slot.message)}</span>
+                  <span className="text-red-500" role="alert">
+                    {String(errors.slot.message)}
+                  </span>
                 )}
               </div>
 
@@ -388,7 +395,9 @@ export function Home() {
                   aria-invalid={errors.port ? "true" : "false"}
                 />
                 {errors.port && (
-                  <span role="alert">{String(errors.port.message)}</span>
+                  <span className="text-red-500" role="alert">
+                    {String(errors.port.message)}
+                  </span>
                 )}
               </div>
 
@@ -401,7 +410,9 @@ export function Home() {
                   aria-invalid={errors.ont_id ? "true" : "false"}
                 />
                 {errors.ont_id && (
-                  <span role="alert">{String(errors.ont_id.message)}</span>
+                  <span className="text-red-500" role="alert">
+                    {String(errors.ont_id.message)}
+                  </span>
                 )}
               </div>
 
@@ -415,7 +426,9 @@ export function Home() {
                 />
 
                 {errors.sn && (
-                  <span role="alert">{String(errors.sn.message)}</span>
+                  <span className="text-red-500" role="alert">
+                    {String(errors.sn.message)}
+                  </span>
                 )}
               </div>
 
@@ -428,7 +441,9 @@ export function Home() {
                   aria-invalid={errors.state ? "true" : "false"}
                 />
                 {errors.state && (
-                  <span role="alert">{String(errors.state.message)}</span>
+                  <span className="text-red-500" role="alert">
+                    {String(errors.state.message)}
+                  </span>
                 )}
               </div>
             </div>

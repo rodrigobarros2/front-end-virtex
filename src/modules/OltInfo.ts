@@ -1,4 +1,5 @@
 import { backendClient } from "../services/api";
+import { toast } from "react-toastify";
 
 export interface IOltData {
   olt_type: string;
@@ -18,6 +19,7 @@ export const fetchOlt = async () => {
     const { data } = await backendClient.get("/data");
     return data;
   } catch (error) {
+    toast.error("Falha ao buscar dados da OLT!");
     console.error("Erro ao buscar dados da OLT:", error);
     throw error;
   }
@@ -26,8 +28,10 @@ export const fetchOlt = async () => {
 export const createOlt = async (data: IOltDataForCreate) => {
   try {
     const response = await backendClient.post("/oltoutput", data);
+    toast.success("Dados cadastrados com sucesso!");
     return response.data;
   } catch (error) {
+    toast.error("Falha ao enviar dados para a OLT!");
     console.error("Erro ao enviar dados para a OLT:", error);
     throw error;
   }
@@ -40,9 +44,9 @@ export const createOltTxt = async (formData: FormData) => {
         "Content-Type": "multipart/form-data",
       },
     });
-    alert("Files uploaded successfully");
+    toast.success("Arquivos enviados com sucesso!");
   } catch (error) {
     console.error("Error uploading files", error);
-    alert("Failed to upload files");
+    toast.error("Falha ao enviar os arquivos!");
   }
 };
