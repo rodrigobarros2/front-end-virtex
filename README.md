@@ -1,5 +1,5 @@
 Notas: Se o tempo de finalizaçao for importante.
-Gostaria de informar que, devido a uma viagem de grande importância, não consegui trabalhar no projeto durante o sábado, domingo e segunda-feira como pode ver por meio dos commits do GitHub. No entanto, utilizei o tempo disponível aproximadamente 72 horas para entregar uma solução completa que atenda às expectativas e aos requisitos técnicos estabelecidos.
+Gostaria de informar que, devido a uma viagem de grande importância, não consegui trabalhar no projeto durante o sábado, domingo e segunda-feira como pode ver por meio dos commits do GitHub. No entanto, utilizei o tempo disponível, aproximadamente 72 horas para entregar uma solução completa que atenda às expectativas e aos requisitos técnicos estabelecidos.
 
 Linha de raciocínio que não implementei, porêm pensei. A ideia era criar um único input no front-end, que seria armazenado no banco de dados pelo back-end. Quando um novo input for enviado, o back-end recuperaria os dados do banco e verificaria se slot, port e ont_id são iguais, atualizando os dados com uma rota PUT. Dessa forma, os campos SN e State ficariam combinados.
 
