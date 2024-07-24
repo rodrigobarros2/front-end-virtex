@@ -26,16 +26,15 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import { Header } from "@/components/header";
 import {
   ArrowUpDownIcon,
-  FileText,
   RefreshCwIcon,
   Table as TableIcon,
 } from "lucide-react";
-
+import { FieldValues, SubmitHandler, useForm } from "react-hook-form";
+import { Label } from "@/components/ui/label";
 import {
   createOlt,
   createOltTxt,
@@ -43,26 +42,31 @@ import {
   IOltData,
   IOltDataForCreate,
 } from "@/modules/OltInfo";
-import { FieldValues, SubmitHandler, useForm } from "react-hook-form";
-import { Label } from "@/components/ui/label";
 
 export function Home() {
-  const { register, handleSubmit, reset } = useForm();
-
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors },
+  } = useForm();
   const [oltExtractorModal, setShowOltExtractorModal] = useState(false);
   const [fileHuawei, setFileHuawei] = useState<File | null>(null);
   const [fileZteState, setFileZteState] = useState<File | null>(null);
   const [fileZteSn, setFileZteSn] = useState<File | null>(null);
   const [oltData, setOltData] = useState<IOltData[]>([]);
   const [fileModalOpen, setFileModalOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
 
-  // Função para buscar dados da API
   const fetchData = async () => {
+    setLoading(true);
     try {
       const response = await fetchOlt();
       setOltData(response);
     } catch (error) {
       console.error("Erro ao buscar dados da API:", error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -132,14 +136,17 @@ export function Home() {
     const formData = new FormData();
     formData.append("huaweiFile", fileHuawei);
 
+    setLoading(true);
     try {
       await createOltTxt(formData);
-      alert("Arquivo Huawei enviado com sucesso!");
       setFileHuawei(null);
-      fetchData(); // Recarregar dados após sucesso
+      fetchData();
     } catch (error) {
       console.error("Erro ao enviar arquivo Huawei:", error);
       alert("Falha ao enviar o arquivo Huawei.");
+    } finally {
+      setLoading(false);
+      setFileModalOpen(false);
     }
   };
 
@@ -153,15 +160,18 @@ export function Home() {
     formData.append("zteStateFile", fileZteState);
     formData.append("zteSnFile", fileZteSn);
 
+    setLoading(true);
     try {
       await createOltTxt(formData);
-      alert("Arquivos ZTE enviados com sucesso!");
       setFileZteState(null);
       setFileZteSn(null);
-      fetchData(); // Recarregar dados após sucesso
+      fetchData();
     } catch (error) {
       console.error("Erro ao enviar arquivos ZTE:", error);
       alert("Falha ao enviar os arquivos ZTE.");
+    } finally {
+      setLoading(false);
+      setFileModalOpen(false);
     }
   };
 
@@ -192,15 +202,19 @@ export function Home() {
                 <Card x-chunk="dashboard-05-chunk-3">
                   <CardHeader>
                     <CardTitle className="text-2xl font-bold">
-                      OntInfo
+                      Informações OLT
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="flex items-center mb-4">
                       <div className="flex items-center space-x-2 ml-auto">
-                        <Button variant="ghost" onClick={handleRefreshTable}>
+                        <Button
+                          variant="ghost"
+                          onClick={handleRefreshTable}
+                          disabled={loading}
+                        >
                           <RefreshCwIcon className="w-5 h-5 mr-2" />
-                          Recarregar
+                          {loading ? "Carregando..." : "Recarregar"}
                         </Button>
 
                         <Button
@@ -226,7 +240,13 @@ export function Home() {
                     <Table>
                       <TableHeader>
                         <TableRow>
-                          <TableHead>slot</TableHead>
+                          <TableHead>
+                            slot
+                            <Button variant="ghost" size="icon">
+                              <ArrowUpDownIcon className="h-4 w-4" />
+                              <span className="sr-only">Sort</span>
+                            </Button>
+                          </TableHead>
                           <TableHead>
                             port
                             <Button variant="ghost" size="icon">
@@ -234,6 +254,7 @@ export function Home() {
                               <span className="sr-only">Sort</span>
                             </Button>
                           </TableHead>
+
                           <TableHead>
                             ont_id
                             <Button variant="ghost" size="icon">
@@ -265,134 +286,213 @@ export function Home() {
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {oltData.map((order, index) => (
+                        {oltData.map((oltItem, index) => (
                           <TableRow
                             key={index}
                             className={index % 2 === 0 ? "bg-accent" : ""}
                           >
-                            <TableCell>{order.slot}</TableCell>
-                            <TableCell>{order.port}</TableCell>
-                            <TableCell>{order.ont_id}</TableCell>
-                            <TableCell>{order.sn}</TableCell>
+                            <TableCell>{oltItem.slot}</TableCell>
+                            <TableCell>{oltItem.port}</TableCell>
+                            <TableCell>{oltItem.ont_id}</TableCell>
+                            <TableCell>{oltItem.sn}</TableCell>
                             <TableCell>
-                              {standardizeState(order.state)}
+                              {standardizeState(oltItem.state)}
                             </TableCell>
-                            <TableCell>{order.olt_type}</TableCell>
+                            <TableCell>{oltItem.olt_type}</TableCell>
                           </TableRow>
                         ))}
                       </TableBody>
                     </Table>
+
+                    <Pagination>
+                      <PaginationContent>
+                        <PaginationItem>
+                          <PaginationPrevious>
+                            <Button variant="outline">Anterior</Button>
+                          </PaginationPrevious>
+                        </PaginationItem>
+                        <PaginationItem>
+                          <PaginationLink>1</PaginationLink>
+                        </PaginationItem>
+                        <PaginationItem>
+                          <PaginationLink>2</PaginationLink>
+                        </PaginationItem>
+                        <PaginationItem>
+                          <PaginationLink>3</PaginationLink>
+                        </PaginationItem>
+                        <PaginationItem>
+                          <PaginationNext>
+                            <Button variant="outline">Próxima</Button>
+                          </PaginationNext>
+                        </PaginationItem>
+                      </PaginationContent>
+                    </Pagination>
                   </CardContent>
                 </Card>
               </TabsContent>
             </Tabs>
-
-            <div className="flex justify-center">
-              <Pagination>
-                <PaginationContent>
-                  <PaginationItem>
-                    <PaginationPrevious href="#" />
-                  </PaginationItem>
-                  <PaginationItem>
-                    <PaginationLink href="#">1</PaginationLink>
-                  </PaginationItem>
-                  <PaginationItem>
-                    <PaginationLink href="#">2</PaginationLink>
-                  </PaginationItem>
-                  <PaginationItem>
-                    <PaginationLink href="#">3</PaginationLink>
-                  </PaginationItem>
-                  <PaginationItem>
-                    <PaginationNext href="#" />
-                  </PaginationItem>
-                </PaginationContent>
-              </Pagination>
-            </div>
           </div>
         </main>
       </div>
 
-      {/* Modal para Carregar Arquivos OLT */}
-      <Dialog open={fileModalOpen} onOpenChange={() => setFileModalOpen(false)}>
-        <DialogTrigger />
+      <Dialog open={oltExtractorModal} onOpenChange={setShowOltExtractorModal}>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
-            <DialogTitle>Carregar Arquivos OLT</DialogTitle>
+            <DialogTitle>Cadastro OLT</DialogTitle>
             <DialogDescription>
-              Selecione os arquivos e envie-os para processamento.
+              Cadastre aqui informações da sua OLT
             </DialogDescription>
           </DialogHeader>
+          <form onSubmit={handleSubmit(onSubmitOntInfo)}>
+            <div className="grid gap-4 py-4">
+              <div className="flex flex-col gap-3">
+                <Label htmlFor="olt_type">OLT</Label>
+                <Input
+                  id="olt_type"
+                  placeholder="Digite a OLT"
+                  {...register("olt_type", {
+                    required: "Tipo de OLT é obrigatório",
+                  })}
+                  aria-invalid={errors.olt_type ? "true" : "false"}
+                />
+                {errors.olt_type && (
+                  <span role="alert">{errors.olt_type.message}</span>
+                )}
+              </div>
 
-          <div className="grid w-full max-w-sm items-center gap-1.5">
-            <Label htmlFor="picture"> Carregar saída de único comando</Label>
-            <Input
-              type="file"
-              accept=".txt"
-              onChange={handleFileChangeHuawei}
-            />
-          </div>
+              <div className="flex flex-col gap-3">
+                <Label htmlFor="slot">Slot</Label>
+                <Input
+                  id="slot"
+                  placeholder="Digite o Slot"
+                  {...register("slot", { required: "Slot é obrigatório" })}
+                  aria-invalid={errors.slot ? "true" : "false"}
+                />
+                {errors.slot && <span role="alert">{errors.slot.message}</span>}
+              </div>
 
-          <div className="grid w-full max-w-sm items-center gap-1.5">
-            <Button className="mb-12" onClick={handleSubmitSingleFile}>
-              Enviar saída de único comando
-            </Button>
+              <div className="flex flex-col gap-3">
+                <Label htmlFor="port">Port</Label>
+                <Input
+                  id="port"
+                  placeholder="Digite o Port"
+                  {...register("port", { required: "Port é obrigatório" })}
+                  aria-invalid={errors.port ? "true" : "false"}
+                />
+                {errors.port && <span role="alert">{errors.port.message}</span>}
+              </div>
 
-            <div className="grid w-full max-w-sm items-center gap-1.5">
-              <Label htmlFor="oltOut1">Carregar saída de dois comandos</Label>
-              <Input
-                id="oltOut1"
-                accept=".txt"
-                type="file"
-                onChange={handleFileChangeZteState}
-              />
+              <div className="flex flex-col gap-3">
+                <Label htmlFor="ont_id">Ont ID</Label>
+                <Input
+                  id="ont_id"
+                  placeholder="Digite o Ont ID"
+                  {...register("ont_id", { required: "Ont ID é obrigatório" })}
+                  aria-invalid={errors.ont_id ? "true" : "false"}
+                />
+                {errors.ont_id && (
+                  <span role="alert">{errors.ont_id.message}</span>
+                )}
+              </div>
+
+              <div className="flex flex-col gap-3">
+                <Label htmlFor="sn">SN</Label>
+                <Input
+                  id="sn"
+                  placeholder="Digite o SN"
+                  {...register("sn", { required: "SN é obrigatório" })}
+                  aria-invalid={errors.sn ? "true" : "false"}
+                />
+                {errors.sn && <span role="alert">{errors.sn.message}</span>}
+              </div>
+
+              <div className="flex flex-col gap-3">
+                <Label htmlFor="state">State</Label>
+                <Input
+                  id="state"
+                  placeholder="Digite o State"
+                  {...register("state", { required: "Estado é obrigatório" })}
+                  aria-invalid={errors.state ? "true" : "false"}
+                />
+                {errors.state && (
+                  <span role="alert">{errors.state.message}</span>
+                )}
+              </div>
             </div>
 
-            <div className="grid w-full max-w-sm items-center gap-1.5 mt-2 mb-3">
-              <Label htmlFor="oltOut2">Carregar saída de dois comandos</Label>
-              <Input
-                id="oltOut2"
-                accept=".txt"
-                type="file"
-                onChange={handleFileChangeZteSn}
-              />
-            </div>
-
-            <Button onClick={handleSubmitTwoFiles}>
-              Enviar saída de dois comandos
-            </Button>
-          </div>
+            <DialogFooter>
+              <Button type="submit">Enviar</Button>
+              <Button type="button" variant="outline" onClick={handleCancel}>
+                Cancelar
+              </Button>
+            </DialogFooter>
+          </form>
         </DialogContent>
       </Dialog>
-
-      {/* Modal para Cadastrar OLT */}
-      <Dialog open={oltExtractorModal} onOpenChange={handleCloseOltModal}>
-        <DialogTrigger />
-        <DialogContent className="sm:max-w-[425px]">
+      <Dialog open={fileModalOpen} onOpenChange={setFileModalOpen}>
+        <DialogContent className="modal-content">
           <DialogHeader>
-            <DialogTitle>Cadastrar OLT</DialogTitle>
+            <DialogTitle>Carregar Arquivos</DialogTitle>
             <DialogDescription>
-              Preencha o formulário para cadastrar uma nova OLT.
+              Carregue os arquivos de OLT aqui.
             </DialogDescription>
           </DialogHeader>
-
-          <div className="flex flex-col items-center justify-center gap-4 py-8">
-            <form onSubmit={handleSubmit(onSubmitOntInfo)}>
-              <div className="grid gap-4 w-full">
-                <Input placeholder="Slot" {...register("slot")} />
-                <Input placeholder="Port" {...register("port")} />
-                <Input placeholder="Ont ID" {...register("ont_id")} />
-                <Input placeholder="SN" {...register("sn")} />
-                <Input placeholder="State" {...register("state")} />
-                <Input placeholder="Marca" {...register("olt_type")} />
+          <form className="modal-form">
+            <div className="form-grid">
+              <div className="form-group mb-4">
+                <Label htmlFor="huawei_file">
+                  Carregar saída de único comando
+                </Label>
+                <Input
+                  className="cursor-pointer"
+                  id="huawei_file"
+                  type="file"
+                  onChange={handleFileChangeHuawei}
+                  aria-invalid={fileHuawei ? "false" : "true"}
+                />
               </div>
-              <DialogFooter className="pt-4">
-                <Button variant="outline" onClick={handleCancel}>
-                  Cancelar
-                </Button>
-                <Button type="submit">Gerar Olt Info</Button>
-              </DialogFooter>
-            </form>
-          </div>
+              <Button
+                className="submit-button w-full mb-12"
+                type="button"
+                onClick={handleSubmitSingleFile}
+              >
+                Enviar saída de dois comandos
+              </Button>
+              <div className="form-group mb-2">
+                <Label htmlFor="zte_state_file">
+                  Carregar saída de dois comandos
+                </Label>
+                <Input
+                  className="cursor-pointer"
+                  id="zte_state_file"
+                  type="file"
+                  onChange={handleFileChangeZteState}
+                  aria-invalid={fileZteState ? "false" : "true"}
+                />
+              </div>
+              <div className="form-group">
+                <Label htmlFor="zte_sn_file">
+                  Carregar saída de dois comandos
+                </Label>
+                <Input
+                  id="zte_sn_file"
+                  type="file"
+                  onChange={handleFileChangeZteSn}
+                  aria-invalid={fileZteSn ? "false" : "true"}
+                  className="cursor-pointer mb-4"
+                />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button
+                className="submit-button w-full"
+                type="button"
+                onClick={handleSubmitTwoFiles}
+              >
+                Enviar saída de dois comandos
+              </Button>
+            </DialogFooter>
+          </form>
         </DialogContent>
       </Dialog>
     </div>
