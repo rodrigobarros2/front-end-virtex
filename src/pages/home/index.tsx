@@ -57,8 +57,10 @@ export function Home() {
   const [singleCommandOutput, setSingleCommandOutput] = useState<File | null>(
     null
   );
-  const [outputOfTwoCommandsIdOne, setOutputOfTwoCommandsIdOne] = useState<File | null>(null);
-  const [outputOfTwoCommandsIdTwo, setOutputOfTwoCommandsIdTwo] = useState<File | null>(null);
+  const [outputOfTwoCommandsIdOne, setOutputOfTwoCommandsIdOne] =
+    useState<File | null>(null);
+  const [outputOfTwoCommandsIdTwo, setOutputOfTwoCommandsIdTwo] =
+    useState<File | null>(null);
   const [oltData, setOltData] = useState<IOltData[]>([]);
   const [fileModalOpen, setFileModalOpen] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -145,7 +147,7 @@ export function Home() {
 
   const handleSubmitSingleFile = async () => {
     if (!singleCommandOutput) {
-      toast.error("Por favor, selecione o arquivo Huawei.");
+      toast.error("Por favor, selecione o arquivo de saída de único comando.");
       return;
     }
 
@@ -168,7 +170,9 @@ export function Home() {
 
   const handleSubmitTwoFiles = async () => {
     if (!outputOfTwoCommandsIdTwo || !outputOfTwoCommandsIdOne) {
-      toast.error("Por favor, selecione os arquivos ZTE.");
+      toast.error(
+        "Por favor, selecione os arquivos de saída de dois comandos."
+      );
       return;
     }
 
