@@ -298,7 +298,7 @@ export function Home() {
                       </TableBody>
                     </Table>
 
-                    <Pagination>
+                    <Pagination className="mt-5">
                       <PaginationContent>
                         <PaginationItem>
                           <PaginationPrevious>
