@@ -54,9 +54,11 @@ export function Home() {
     formState: { errors },
   } = useForm();
   const [oltExtractorModal, setShowOltExtractorModal] = useState(false);
-  const [fileHuawei, setFileHuawei] = useState<File | null>(null);
-  const [fileZteState, setFileZteState] = useState<File | null>(null);
-  const [fileZteSn, setFileZteSn] = useState<File | null>(null);
+  const [singleCommandOutput, setSingleCommandOutput] = useState<File | null>(
+    null
+  );
+  const [outputOfTwoCommandsIdOne, setOutputOfTwoCommandsIdOne] = useState<File | null>(null);
+  const [outputOfTwoCommandsIdTwo, setOutputOfTwoCommandsIdTwo] = useState<File | null>(null);
   const [oltData, setOltData] = useState<IOltData[]>([]);
   const [fileModalOpen, setFileModalOpen] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -122,34 +124,38 @@ export function Home() {
   const handleFileChangeHuawei = (
     event: React.ChangeEvent<HTMLInputElement>
   ) => {
-    setFileHuawei(event.target.files ? event.target.files[0] : null);
+    setSingleCommandOutput(event.target.files ? event.target.files[0] : null);
   };
 
   const handleFileChangeZteState = (
     event: React.ChangeEvent<HTMLInputElement>
   ) => {
-    setFileZteState(event.target.files ? event.target.files[0] : null);
+    setOutputOfTwoCommandsIdTwo(
+      event.target.files ? event.target.files[0] : null
+    );
   };
 
   const handleFileChangeZteSn = (
     event: React.ChangeEvent<HTMLInputElement>
   ) => {
-    setFileZteSn(event.target.files ? event.target.files[0] : null);
+    setOutputOfTwoCommandsIdOne(
+      event.target.files ? event.target.files[0] : null
+    );
   };
 
   const handleSubmitSingleFile = async () => {
-    if (!fileHuawei) {
+    if (!singleCommandOutput) {
       toast.error("Por favor, selecione o arquivo Huawei.");
       return;
     }
 
     const formData = new FormData();
-    formData.append("huaweiFile", fileHuawei);
+    formData.append("singleCommandOutput", singleCommandOutput);
 
     setLoading(true);
     try {
       await createOltTxt(formData);
-      setFileHuawei(null);
+      setSingleCommandOutput(null);
       fetchData();
     } catch (error) {
       console.error("Erro ao enviar arquivo Huawei:", error);
@@ -161,20 +167,20 @@ export function Home() {
   };
 
   const handleSubmitTwoFiles = async () => {
-    if (!fileZteState || !fileZteSn) {
+    if (!outputOfTwoCommandsIdTwo || !outputOfTwoCommandsIdOne) {
       toast.error("Por favor, selecione os arquivos ZTE.");
       return;
     }
 
     const formData = new FormData();
-    formData.append("zteStateFile", fileZteState);
-    formData.append("zteSnFile", fileZteSn);
+    formData.append("outputOfTwoCommandsIdTwo", outputOfTwoCommandsIdTwo);
+    formData.append("outputOfTwoCommandsIdOne", outputOfTwoCommandsIdOne);
 
     setLoading(true);
     try {
       await createOltTxt(formData);
-      setFileZteState(null);
-      setFileZteSn(null);
+      setOutputOfTwoCommandsIdTwo(null);
+      setOutputOfTwoCommandsIdOne(null);
       fetchData();
     } catch (error) {
       console.error("Erro ao enviar arquivos ZTE:", error);
@@ -461,7 +467,7 @@ export function Home() {
                   id="huawei_file"
                   type="file"
                   onChange={handleFileChangeHuawei}
-                  aria-invalid={fileHuawei ? "false" : "true"}
+                  aria-invalid={singleCommandOutput ? "false" : "true"}
                 />
               </div>
               <Button
@@ -480,7 +486,7 @@ export function Home() {
                   id="zte_state_file"
                   type="file"
                   onChange={handleFileChangeZteState}
-                  aria-invalid={fileZteState ? "false" : "true"}
+                  aria-invalid={outputOfTwoCommandsIdTwo ? "false" : "true"}
                 />
               </div>
               <div className="form-group">
@@ -491,7 +497,7 @@ export function Home() {
                   id="zte_sn_file"
                   type="file"
                   onChange={handleFileChangeZteSn}
-                  aria-invalid={fileZteSn ? "false" : "true"}
+                  aria-invalid={outputOfTwoCommandsIdOne ? "false" : "true"}
                   className="cursor-pointer mb-4"
                 />
               </div>
